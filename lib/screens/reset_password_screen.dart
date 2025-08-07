@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -48,7 +49,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://<BACKEND_URL>/api/reset-password'), // ← endpoint'e göre güncelle
+        Uri.parse('baseUrl/api/reset-password'), // ← endpoint'e göre güncelle
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'token': token, 'newPassword': password}),
       );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -31,7 +32,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://<BACKEND_URL>/api/forgot-password'), // ← endpoint'i backend'e göre değiştir
+        Uri.parse('baseUrl/api/forgot-password'), // ← endpoint'i backend'e göre değiştir
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       );
