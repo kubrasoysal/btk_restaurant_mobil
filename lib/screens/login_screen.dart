@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,8 +15,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool passwordVisible = false;
   String errorText = '';
+  String userRole = '';
+  bool loading = false;
 
-  void login() {
+  Future<void> login() async {
     final email = emailController.text;
     final password = passwordController.text;
 
@@ -22,14 +27,47 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (email == 'garson@test.com' && password == 'Test123!') {
-      Navigator.pushNamed(context, '/garson');
-    } else if (email == 'kasiyer@test.com' && password == 'Test123!') {
-      Navigator.pushNamed(context, '/kasiyer');
-    } else if (email == 'test123@test.com' && password == 'Test123!') {
-      Navigator.pushNamed(context, '/admin');
-    } else {
-      setState(() => errorText = 'Geçersiz giriş.');
+    setState(() {
+      loading = true;
+      errorText = '';
+      userRole = '';
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}/api/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          int roleId = data['roleId'];
+          String roleText = '';
+          if (roleId == 0) {
+            roleText = 'Admin olarak giriş yaptınız';
+          } else if (roleId == 1) {
+            roleText = 'Garson olarak giriş yaptınız';
+          } else if (roleId == 2) {
+            roleText = 'Kasiyer olarak giriş yaptınız';
+          } else {
+            roleText = 'Bilinmeyen rol';
+          }
+          setState(() {
+            userRole = roleText;
+            errorText = '';
+          });
+        } else {
+          setState(() => errorText = data['message'] ?? 'Giriş başarısız.');
+        }
+      } else {
+        setState(() => errorText = 'Sunucu hatası: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() => errorText = 'Hata: ${e.toString()}');
+    } finally {
+      setState(() => loading = false);
     }
   }
 
@@ -118,9 +156,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: Colors.red),
                         textAlign: TextAlign.center),
                   ),
+                if (userRole.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(userRole,
+                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 18),
+                        textAlign: TextAlign.center),
+                  ),
                 SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: login,
+                  onPressed: loading ? null : login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFA294F9),
                     minimumSize: Size(double.infinity, 48),
